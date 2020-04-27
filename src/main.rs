@@ -7,7 +7,7 @@ mod game;
 mod git;
 mod show;
 
-use arg::parse_arguments;
+use arg::{parse_arguments, Command};
 use game::{Direction, Game, Map, Player, Position, Square, Team};
 use git::ServerRepo;
 use show::show;
@@ -22,7 +22,7 @@ fn main() {
         .expect("failed to load game");
     game.us = Some("wmww".to_owned());
     match args.command {
-        Show => show(&game),
+        Command::Show => show(&game),
     }
     //eprintln!("Game: {:?}", game);
     let action = ai::run(&game);
