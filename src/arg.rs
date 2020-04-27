@@ -9,8 +9,8 @@ pub enum Command {
 #[derive(Debug, PartialEq)]
 pub struct Arguments
 {
-	server_repo_path: OsString,
-	command: Command,
+	pub server_repo_path: OsString,
+	pub command: Command,
 }
 
 fn build_clap_app<'a>() -> App<'a, 'a> {

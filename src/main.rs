@@ -2,10 +2,13 @@
 extern crate clap;
 
 mod arg;
+mod git;
 
 use arg::parse_arguments;
+use git::ServerRepo;
 
 fn main() {
 	let args = parse_arguments();
-	println!("Running with arguments: {:?}", args);
+	eprintln!("Running with arguments: {:?}", args);
+	let server_repo = ServerRepo::new(&args.server_repo_path);
 }
