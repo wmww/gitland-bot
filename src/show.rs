@@ -24,13 +24,18 @@ fn show_map_stats(map: &Map) {
             squares_by_team.insert(square.controlled_by, 1);
         }
     }
-	let total_squares = map.squares.len() * map.squares[0].len();
+    let total_squares = map.squares.len() * map.squares[0].len();
     for (player, count) in squares_by_team {
-        println!("{} squares controlled by {:?} ({:.1}%)", count, player, (count as f32) / (total_squares as f32) * 100.0);
+        println!(
+            "{} squares controlled by {:?} ({:.1}%)",
+            count,
+            player,
+            (count as f32) / (total_squares as f32) * 100.0
+        );
     }
 }
 
 pub fn show(game: &Game) {
     show_player_stats(game);
-	show_map_stats(game.timeline.last().expect("no maps"));
+    show_map_stats(game.timeline.last().expect("no maps"));
 }

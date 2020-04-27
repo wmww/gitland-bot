@@ -84,9 +84,9 @@ impl ServerRepo {
         let team_str = self.load_contents_of_file(&tree, "team")?;
         let x_str = self.load_contents_of_file(&tree, "x")?;
         let y_str = self.load_contents_of_file(&tree, "y")?;
-        let team = team_str.parse()?;
-        let x = x_str.parse()?;
-        let y = y_str.parse()?;
+        let team = team_str.trim().parse()?;
+        let x = x_str.trim().parse()?;
+        let y = y_str.trim().parse()?;
         let position = Position::new(x, y);
         Ok(PlayerData {
             name,
@@ -127,9 +127,11 @@ impl ServerRepo {
         let last_commit = master.into_reference().peel_to_commit()?;
         let player_data = self.load_players_from_commit(&last_commit)?;
         let map_data = self.load_map_from_commit(&last_commit)?;
-        let mut players = HashMap::new();
+        let mut game_players = HashMap::new();
+        let mut map_players = HashMap::new();
         for player in player_data {
-            players.insert(
+            map_players.insert(player.name.clone(), player.position);
+            game_players.insert(
                 player.name.clone(),
                 Player {
                     team: player.team,
@@ -142,11 +144,14 @@ impl ServerRepo {
             .into_iter()
             .map(|row| row.into_iter().map(Square::new).collect())
             .collect();
-        let map = Map { squares };
+        let map = Map {
+            players: map_players,
+            squares,
+        };
         let timeline = vec![map];
         let game = Game {
             us: None,
-            players,
+            players: game_players,
             timeline,
         };
         Ok(game)

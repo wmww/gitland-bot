@@ -8,7 +8,7 @@ mod git;
 mod show;
 
 use arg::{parse_arguments, Command};
-use game::{Direction, Game, Map, Player, Position, Square, Team};
+use game::*;
 use git::ServerRepo;
 use show::show;
 
