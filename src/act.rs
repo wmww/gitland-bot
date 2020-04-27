@@ -1,5 +1,5 @@
 use super::*;
-use std::fs::OpenOptions;
+use std::fs::{remove_file, OpenOptions};
 use std::io::Write;
 
 pub fn act(game: &Game, args: &ActArgs) {
@@ -9,8 +9,10 @@ pub fn act(game: &Game, args: &ActArgs) {
     let mut act_path = args.client_repo_path.clone();
     act_path.push("/act");
     eprintln!("Writing {:?} to {:?}", action_str, act_path);
+    remove_file(&act_path).expect("failed to remove old file");
     let mut act_file = OpenOptions::new()
         .write(true)
+        .create(true)
         .open(&act_path)
         .expect("failed to open act file");
     act_file
