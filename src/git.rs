@@ -121,7 +121,7 @@ impl ServerRepo {
         Ok(map.parse()?)
     }
 
-    pub fn load_game(&self, history_limit: Option<u32>) -> Result<Game, Box<dyn Error>> {
+    pub fn load_game(&self, _history_limit: Option<u32>) -> Result<Game, Box<dyn Error>> {
         eprintln!("Loading game from repo");
         let master = self.repo.find_branch("master", BranchType::Local)?;
         let last_commit = master.into_reference().peel_to_commit()?;
@@ -144,10 +144,7 @@ impl ServerRepo {
             .into_iter()
             .map(|row| row.into_iter().map(Square::new).collect())
             .collect();
-        let map = Map {
-            players: map_players,
-            squares,
-        };
+        let map = Map::new(map_players, squares)?;
         let timeline = vec![map];
         let game = Game {
             us: None,

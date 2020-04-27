@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Direction {
     Null,
     Up,
@@ -79,14 +79,14 @@ pub struct Player {
 #[derive(Debug, Clone)]
 pub struct Square {
     pub controlled_by: Team,
-    //pub occupied_by_player: Option<String>,
+    pub occupied_by_player: Option<String>,
 }
 
 impl Square {
     pub fn new(team: Team) -> Self {
         Self {
             controlled_by: team,
-            //occupied_by_player: None,
+            occupied_by_player: None,
         }
     }
 }
@@ -95,16 +95,56 @@ impl Square {
 pub struct Map {
     pub players: HashMap<String, Position>,
     pub squares: Vec<Vec<Square>>,
+    width: usize,
+    height: usize,
 }
 
 impl Map {
-    pub fn square(&self, pos: Position) -> Option<Square> {
-        if pos.y >= 0 && (pos.y as usize) < self.squares.len() {
-            if pos.x >= 0 && (pos.x as usize) < self.squares[pos.y as usize].len() {
-                Some(self.squares[pos.y as usize][pos.x as usize].clone())
-            } else {
-                None
+    pub fn new(
+        players: HashMap<String, Position>,
+        squares: Vec<Vec<Square>>,
+    ) -> Result<Self, String> {
+        let height = squares.len();
+        if height == 0 {
+            return Err("no squares".to_owned());
+        }
+        let width = squares[0].len();
+        for (i, row) in squares.iter().enumerate() {
+            if row.len() != width {
+                return Err(format!(
+                    "First row is {} wide but row {} is {} wide",
+                    width,
+                    i,
+                    row.len()
+                ));
             }
+        }
+        let mut map = Self {
+            players,
+            squares,
+            width,
+            height,
+        };
+        for (name, pos) in &map.players {
+            let mut square = &mut map.squares[pos.y as usize][pos.x as usize];
+            if let Some(player) = &square.occupied_by_player {
+                return Err(format!(
+                    "{} is occupied by both {} and {}",
+                    pos, player, name
+                ));
+            }
+            square.occupied_by_player = Some(name.to_string());
+        }
+        Ok(map)
+    }
+
+    pub fn is_inside(&self, pos: Position) -> bool {
+        pos.x >= 0 && (pos.x as usize) < self.width && pos.y >= 0 && (pos.y as usize) < self.height
+    }
+
+    pub fn square(&self, pos: Position) -> Option<&Square> {
+        if self.is_inside(pos) {
+            Some(&self.squares[pos.y as usize][pos.x as usize])
         } else {
             None
         }
