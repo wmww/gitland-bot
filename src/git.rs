@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::ffi::OsStr;
 use std::str::from_utf8;
+use std::str::FromStr;
 
 use crate::{Game, Position, Team};
 
@@ -18,8 +19,26 @@ struct PlayerData {
 }
 
 #[derive(Debug)]
-struct BoardData {
+struct MapData {
     squares: Vec<Vec<Team>>,
+}
+
+impl FromStr for MapData {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut squares = Vec::new();
+        for line in s.lines() {
+            let mut row = Vec::with_capacity(25);
+            if !line.trim().is_empty() {
+                for s in line.split(',') {
+                    row.push(s.parse()?);
+                }
+                squares.push(row);
+            }
+        }
+        Ok(MapData { squares })
+    }
 }
 
 impl ServerRepo {
@@ -81,11 +100,19 @@ impl ServerRepo {
         Ok(players)
     }
 
+    fn load_map_from_commit(&self, commit: &Commit) -> Result<MapData, Box<dyn Error>> {
+        let root_tree = commit.tree()?;
+        let map = self.load_contents_of_file(&root_tree, "map")?;
+        Ok(map.parse()?)
+    }
+
     pub fn load_game(&self, history_limit: Option<u32>) -> Result<Game, Box<dyn Error>> {
         let master = self.repo.find_branch("master", BranchType::Local)?;
         let last_commit = master.into_reference().peel_to_commit()?;
         let players = self.load_players_from_commit(&last_commit)?;
+        let map = self.load_map_from_commit(&last_commit)?;
         eprintln!("Players: {:#?}", players);
+        eprintln!("Map: {:?}", map);
         let game = Game {
             players: HashMap::new(),
             timeline: Vec::new(),

@@ -6,7 +6,7 @@ mod game;
 mod git;
 
 use arg::parse_arguments;
-use game::{Board, Game, Player, Position, Square, Team};
+use game::{Game, Map, Player, Position, Square, Team};
 use git::ServerRepo;
 
 fn main() {
