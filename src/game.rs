@@ -10,6 +10,18 @@ pub enum Direction {
     Right,
 }
 
+impl std::fmt::Display for Direction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Null => write!(f, ""),
+            Self::Up => write!(f, "up"),
+            Self::Down => write!(f, "down"),
+            Self::Left => write!(f, "left"),
+            Self::Right => write!(f, "right"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Team {
     Null,

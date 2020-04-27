@@ -2,8 +2,14 @@ use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use std::ffi::OsString;
 
 #[derive(Debug, PartialEq)]
+pub struct ActArgs {
+    pub client_repo_path: OsString,
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Command {
     Show,
+    Act(ActArgs),
 }
 
 #[derive(Debug, PartialEq)]
@@ -34,6 +40,22 @@ fn build_clap_app<'a>() -> App<'a, 'a> {
                 .version(&crate_version!()[..])
                 .author(crate_authors!("\n")),
         )
+        .subcommand(
+            SubCommand::with_name("act")
+                .about("Make a move")
+                .version(&crate_version!()[..])
+                .author(crate_authors!("\n"))
+                .arg(
+                    Arg::with_name("CLIENT_REPO")
+                        .short("c")
+                        .long("client-repo")
+                        .env("GITLAND_CLIENT_REPO")
+                        .value_name("DIRECTORY")
+                        .help("Sets the directory to look for the client repo in")
+                        .takes_value(true)
+                        .required(true),
+                ),
+        )
 }
 
 fn parse_matches(matches: &ArgMatches) -> Arguments {
@@ -43,6 +65,16 @@ fn parse_matches(matches: &ArgMatches) -> Arguments {
         .into();
     let command = match matches.subcommand_name() {
         Some("show") => Command::Show,
+        Some(name @ "act") => {
+            let subcommand = matches
+                .subcommand_matches(name)
+                .expect("did not find subcommand");
+            let client_repo_path = subcommand
+                .value_of_os("CLIENT_REPO")
+                .expect("failed to find client repo")
+                .into();
+            Command::Act(ActArgs { client_repo_path })
+        }
         Some(cmd) => panic!("unknown subcommand: {}", cmd),
         None => panic!("no subcommand"),
     };

@@ -1,13 +1,15 @@
 #[macro_use]
 extern crate clap;
 
+mod act;
 mod ai;
 mod arg;
 mod game;
 mod git;
 mod show;
 
-use arg::{parse_arguments, Command};
+use act::act;
+use arg::{parse_arguments, ActArgs, Command};
 use game::*;
 use git::ServerRepo;
 use show::show;
@@ -23,8 +25,7 @@ fn main() {
     game.us = Some("wmww".to_owned());
     match args.command {
         Command::Show => show(&game),
+        Command::Act(act_args) => act(&game, &act_args),
     }
-    //eprintln!("Game: {:?}", game);
-    let action = ai::run(&game);
-    eprintln!("AI thinks we should move {:?}", action);
+    eprintln!("Done");
 }
