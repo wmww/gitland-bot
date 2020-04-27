@@ -21,6 +21,8 @@ iteration() {
   fi
 }
 
+cargo build --release
+
 while true; do
   iteration
   echo
