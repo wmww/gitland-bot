@@ -1,12 +1,13 @@
 #[macro_use]
 extern crate clap;
 
+mod ai;
 mod arg;
 mod game;
 mod git;
 
 use arg::parse_arguments;
-use game::{Game, Map, Player, Position, Square, Team};
+use game::{Direction, Game, Map, Player, Position, Square, Team};
 use git::ServerRepo;
 
 fn main() {
@@ -17,5 +18,7 @@ fn main() {
     let game = server_repo
         .load_game(Some(12))
         .expect("failed to load game");
-    println!("Game: {:?}", game);
+    //eprintln!("Game: {:?}", game);
+    let action = ai::run(&game);
+    eprintln!("AI thinks we should move {:?}", action);
 }

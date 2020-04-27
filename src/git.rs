@@ -122,6 +122,7 @@ impl ServerRepo {
     }
 
     pub fn load_game(&self, history_limit: Option<u32>) -> Result<Game, Box<dyn Error>> {
+        eprintln!("Loading game from repo");
         let master = self.repo.find_branch("master", BranchType::Local)?;
         let last_commit = master.into_reference().peel_to_commit()?;
         let player_data = self.load_players_from_commit(&last_commit)?;
