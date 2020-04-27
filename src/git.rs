@@ -5,7 +5,7 @@ use std::ffi::OsStr;
 use std::str::from_utf8;
 use std::str::FromStr;
 
-use crate::{Game, Position, Team};
+use crate::{Game, Map, Player, Position, Square, Team};
 
 pub struct ServerRepo {
     repo: Repository,
@@ -37,7 +37,22 @@ impl FromStr for MapData {
                 squares.push(row);
             }
         }
-        Ok(MapData { squares })
+        if squares.is_empty() {
+            Err("map empty".to_owned())
+        } else {
+            let width = squares[0].len();
+            for (i, row) in squares.iter().enumerate() {
+                if row.len() != width {
+                    return Err(format!(
+                        "First row is {} wide but row {} is {} wide",
+                        width,
+                        i,
+                        row.len()
+                    ));
+                }
+            }
+            Ok(MapData { squares })
+        }
     }
 }
 
@@ -109,14 +124,26 @@ impl ServerRepo {
     pub fn load_game(&self, history_limit: Option<u32>) -> Result<Game, Box<dyn Error>> {
         let master = self.repo.find_branch("master", BranchType::Local)?;
         let last_commit = master.into_reference().peel_to_commit()?;
-        let players = self.load_players_from_commit(&last_commit)?;
-        let map = self.load_map_from_commit(&last_commit)?;
-        eprintln!("Players: {:#?}", players);
-        eprintln!("Map: {:?}", map);
-        let game = Game {
-            players: HashMap::new(),
-            timeline: Vec::new(),
-        };
+        let player_data = self.load_players_from_commit(&last_commit)?;
+        let map_data = self.load_map_from_commit(&last_commit)?;
+        let mut players = HashMap::new();
+        for player in player_data {
+            players.insert(
+                player.name.clone(),
+                Player {
+                    team: player.team,
+                    name: player.name,
+                },
+            );
+        }
+        let squares = map_data
+            .squares
+            .into_iter()
+            .map(|row| row.into_iter().map(|team| Square::new(team)).collect())
+            .collect();
+        let map = Map { squares };
+        let timeline = vec![map];
+        let game = Game { players, timeline };
         Ok(game)
     }
 }
