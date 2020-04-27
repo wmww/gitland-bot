@@ -140,11 +140,15 @@ impl ServerRepo {
         let squares = map_data
             .squares
             .into_iter()
-            .map(|row| row.into_iter().map(|team| Square::new(team)).collect())
+            .map(|row| row.into_iter().map(Square::new).collect())
             .collect();
         let map = Map { squares };
         let timeline = vec![map];
-        let game = Game { players, timeline };
+        let game = Game {
+            us: None,
+            players,
+            timeline,
+        };
         Ok(game)
     }
 }

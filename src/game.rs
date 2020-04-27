@@ -10,7 +10,7 @@ pub enum Direction {
     Right,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Team {
     Null,
     Red,
@@ -72,6 +72,7 @@ pub struct Map {
 
 #[derive(Debug)]
 pub struct Game {
+    pub us: Option<String>,
     pub players: HashMap<String, Player>,
     pub timeline: Vec<Map>,
 }
