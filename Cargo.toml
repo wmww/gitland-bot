@@ -1,0 +1,9 @@
+[package]
+name = "wmww-gitland-bot"
+description = "wmww's client bot for gitland (https://github.com/programical/gitland))"
+version = "0.1.0"
+authors = ["William Wold <wm@wmww.sh>"]
+edition = "2018"
+
+[dependencies]
+clap = "2.33"
