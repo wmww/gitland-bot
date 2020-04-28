@@ -14,8 +14,8 @@ iteration() {
   echo "Checking for an action..."
   if ! git -C "$CLIENT_REPO" diff --exit-code act; then
     git -C "$CLIENT_REPO" add act
-    git -C "$CLIENT_REPO" commit -m "made move"
-    git -C "$CLIENT_REPO" push
+    git -C "$CLIENT_REPO" commit --amend -m Move
+    git -C "$CLIENT_REPO" push -f
   else
     echo "No change, still going $(cat $CLIENT_REPO/act)"
   fi
@@ -24,9 +24,11 @@ iteration() {
 cargo build --release
 
 while true; do
+  echo
+  echo ================================================
+  echo
   iteration
   echo
   echo "sleeping..."
-  echo ================================================
   sleep 45s
 done
