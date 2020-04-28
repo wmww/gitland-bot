@@ -12,12 +12,13 @@ iteration() {
   ./target/release/wmww-gitland-bot --server-repo "$SERVER_REPO" act --client-repo "$CLIENT_REPO"
   echo
   echo "Checking for an action..."
+  MOVE="$(cat $CLIENT_REPO/act)"
   if ! git -C "$CLIENT_REPO" diff --exit-code act; then
     git -C "$CLIENT_REPO" add act
-    git -C "$CLIENT_REPO" commit --amend -m Move
+    git -C "$CLIENT_REPO" commit -m "Move $MOVE"
     git -C "$CLIENT_REPO" push -f
   else
-    echo "No change, still going $(cat $CLIENT_REPO/act)"
+    echo "No change, still going $MOVE"
   fi
 }
 
