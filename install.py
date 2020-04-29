@@ -2,6 +2,7 @@
 
 import logging
 import os
+import stat
 from os import system, path
 from os.path import realpath, dirname, expanduser
 
@@ -43,19 +44,13 @@ def git_add_remote(repo_path, name, url):
     logger.info('Adding ' + name + ' remote to ' + repo_path)
     run_command('git -C "' + repo_path + '" remote add ' + name + ' ' + url)
 
-def clone_repo_if_needed(repo_url, dst_path):
-    if path.exists(dst_path):
-        logger.info(dst_path + ' exists, assuming repo set up correctly')
-        return
-    git_clone(repo_url, dst_path)
-
 def fix_path(p):
     '''Takes a path relative to the bot repo dir and returns an absolute path'''
     p = expanduser(p)
     if path.isabs(p):
         return realpath(p)
     else:
-        return realpath(dirname(__file__) + './' + p)
+        return realpath(dirname(__file__) + '/' + p)
 
 class Context:
     def __init__(self):
@@ -69,21 +64,28 @@ class Context:
         self.ssh_key_name = 'gitland-client.deploy'
         self.ssh_pub_key_path = self.ssh_dir_path + '/' + self.ssh_key_name + '.pub'
         self.ssh_priv_key_path = self.ssh_dir_path + '/' + self.ssh_key_name
+        self.runner_bin_path = fix_path('/usr/bin/gitland-bot')
 
     def setup_gitland_client_repo(self):
-        clone_repo_if_needed(
-            'https://github.com/' + self.github_name + '/gitland-client.git',
-            self.client_repo_path)
+        if path.exists(self.client_repo_path):
+            logger.info(self.client_repo_path + ' exists, assuming client repo set up correctly')
+        else:
+            git_clone(
+                'https://github.com/' + self.github_name + '/gitland-client.git',
+                self.client_repo_path)
+            git_add_remote(
+                self.client_repo_path,
+                'deploy',
+                'git@github.com:' + self.github_name + '/gitland-client.git')
         git_pull(self.client_repo_path)
-        git_add_remote(
-            self.client_repo_path,
-            'deploy',
-            'git@github.com:' + self.github_name + '/gitland-client.git')
     
     def setup_gitland_server_repo(self):
-        clone_repo_if_needed(
-            'https://github.com/programical/gitland.git',
-            self.server_repo_path)
+        if path.exists(self.server_repo_path):
+            logger.info(self.server_repo_path + ' exists, assuming server repo set up correctly')
+        else:
+            git_clone(
+                'https://github.com/programical/gitland.git',
+                self.server_repo_path)
         # Pull happens every cycle anyway
 
     def _create_deploy_key_pair(self):
@@ -134,10 +136,32 @@ class Context:
         self._create_deploy_key_pair()
         self._add_deploy_keys_to_config()
 
+    def setup_gitland_bot_runner(self):
+        logger.info('Writing runner script to ' + self.runner_bin_path)
+        contents = (
+            '#!/bin/bash\n' +
+            'set -euo pipefail\n' +
+            'cd ' + self.bot_repo_path + '\n' +
+            './run_script.sh\n')
+        runner_file = open(self.runner_bin_path, 'w')
+        runner_file.write(contents)
+        runner_file.close()
+        st = os.stat(self.runner_bin_path)
+        os.chmod(self.runner_bin_path, st.st_mode | stat.S_IEXEC)
+
+    def tell_user_to_enable_service(self):
+        add_required_action(
+            'Enable systemd service',
+            'Run `systemctl enable gitland-bot.service` ' +
+            'and/or `systemctl start gitland-bot.service` ' +
+            'to run the bot')
+
 logging.basicConfig(level=logging.DEBUG)
 context = Context()
 context.setup_gitland_client_repo()
 context.setup_gitland_server_repo()
 context.setup_deploy_key()
+context.setup_gitland_bot_runner()
+context.tell_user_to_enable_service()
 show_required_actions()
 logger.info('Done')
