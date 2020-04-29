@@ -55,6 +55,8 @@ def fix_path(p):
 class Context:
     def __init__(self):
         self.github_name = 'wmww'
+        self.git_email = 'wm@wmww.sh'
+        self.git_name = 'wmww\'s gitland bot'
         self.required_ubuntu_packages = ['git', 'cargo', 'pkg-config', 'libssl-dev']
         self.bot_repo_path = fix_path('.')
         self.client_repo_name = 'gitland-client'
@@ -71,6 +73,14 @@ class Context:
         run_command('apt update')
         run_command('apt upgrade')
         run_command('apt install ' + ' '.join(self.required_ubuntu_packages))
+
+    def setup_git(self):
+        git_conf_path = fix_path('~/.gitconfig')
+        if path.exists(git_conf_path):
+            logging.log(git_conf_path + ' exists, so assuming git is already configured')
+            return
+        run_command('git config --global user.email "' + self.git_email + '"')
+        run_command('git config --global user.name "' + self.git_name + '"')
 
     def setup_gitland_client_repo(self):
         if path.exists(self.client_repo_path):
@@ -165,6 +175,7 @@ class Context:
 logging.basicConfig(level=logging.DEBUG)
 context = Context()
 context.update_and_install()
+context.setup_git()
 context.setup_gitland_client_repo()
 context.setup_gitland_server_repo()
 context.setup_deploy_key()
