@@ -79,7 +79,7 @@ class Context:
     def setup_git(self):
         git_conf_path = fix_path('~/.gitconfig')
         if path.exists(git_conf_path):
-            logging.log(git_conf_path + ' exists, so assuming git is already configured')
+            logging.info(git_conf_path + ' exists, so assuming git is already configured')
             return
         run_command('git config --global user.email "' + self.git_email + '"')
         run_command('git config --global user.name "' + self.git_name + '"')
@@ -169,6 +169,7 @@ class Context:
 
     def setup_systemd_service(self):
         service_file = fix_path('gitland-bot.service')
+        logging.info('Copying service file at ' + service_file + ' to ' + self.service_file_dst)
         shutil.copy(service_file, self.service_file_dst)
         add_required_action(
             'Enable systemd service',
