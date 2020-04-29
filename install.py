@@ -128,7 +128,7 @@ class Context:
         if not path.exists(self.ssh_config_path):
             logger.info('Creating SSH config directory')
             open(self.ssh_config_path, 'a').close()
-        host_line = 'Host ' + self.client_repo_name
+        host_line = 'host github.com'
         config = open(self.ssh_config_path, 'r')
         for line in config.readlines():
             if line.strip() == host_line:
@@ -138,8 +138,8 @@ class Context:
         config = open(self.ssh_config_path, 'a')
         config.write('\n' +
             host_line +'\n' +
-            'Hostname github.com\n' +
-            'IdentityFile ' + self.ssh_priv_key_path + '\n')
+            'user git\n' +
+            'identityfile ' + self.ssh_priv_key_path + '\n')
         config.close()
 
     def setup_deploy_key(self):
