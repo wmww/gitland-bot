@@ -16,7 +16,7 @@ fn count_good_squares_in_direction(
         if let Some(square) = map.square(pos) {
             if square.occupied_by_player.is_none() {
                 if square.controlled_by == Team::Null {
-                    score += value * 1.2;
+                    score += value * 0.8;
                 } else if square.controlled_by != our_team {
                     score += value;
                 } else {
