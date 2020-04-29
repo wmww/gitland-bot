@@ -55,6 +55,7 @@ def fix_path(p):
 class Context:
     def __init__(self):
         self.github_name = 'wmww'
+        self.required_ubuntu_packages = ['git', 'cargo', 'pkg-config', 'libssl-dev']
         self.bot_repo_path = fix_path('.')
         self.client_repo_name = 'gitland-client'
         self.client_repo_path = fix_path('../' + self.client_repo_name)
@@ -65,6 +66,11 @@ class Context:
         self.ssh_pub_key_path = self.ssh_dir_path + '/' + self.ssh_key_name + '.pub'
         self.ssh_priv_key_path = self.ssh_dir_path + '/' + self.ssh_key_name
         self.runner_bin_path = fix_path('/usr/bin/gitland-bot')
+
+    def update_and_install(self):
+        run_command('apt update')
+        run_command('apt upgrade')
+        run_command('apt install ' + ' '.join(self.required_ubuntu_packages))
 
     def setup_gitland_client_repo(self):
         if path.exists(self.client_repo_path):
@@ -158,6 +164,7 @@ class Context:
 
 logging.basicConfig(level=logging.DEBUG)
 context = Context()
+context.update_and_install()
 context.setup_gitland_client_repo()
 context.setup_gitland_server_repo()
 context.setup_deploy_key()
