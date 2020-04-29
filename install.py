@@ -39,6 +39,10 @@ def git_pull(repo_path):
     logger.info('Pulling ' + repo_path)
     run_command('git -C "' + repo_path + '" pull')
 
+def git_add_remote(repo_path, name, url):
+    logger.info('Adding ' + name + ' remote to ' + repo_path)
+    run_command('git -C "' + repo_path + '" remote add ' + name + ' ' + url)
+
 def clone_repo_if_needed(repo_url, dst_path):
     if path.exists(dst_path):
         logger.info(dst_path + ' exists, assuming repo set up correctly')
@@ -68,9 +72,13 @@ class Context:
 
     def setup_gitland_client_repo(self):
         clone_repo_if_needed(
-            'git@github.com:' + self.github_name + '/gitland-client.git',
+            'https://github.com/' + self.github_name + '/gitland-client.git',
             self.client_repo_path)
         git_pull(self.client_repo_path)
+        git_add_remote(
+            self.client_repo_path,
+            'deploy',
+            'git@github.com:' + self.github_name + '/gitland-client.git')
     
     def setup_gitland_server_repo(self):
         clone_repo_if_needed(
@@ -128,8 +136,8 @@ class Context:
 
 logging.basicConfig(level=logging.DEBUG)
 context = Context()
-context.setup_deploy_key()
 context.setup_gitland_client_repo()
 context.setup_gitland_server_repo()
+context.setup_deploy_key()
 show_required_actions()
 logger.info('Done')

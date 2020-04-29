@@ -19,7 +19,7 @@ iteration() {
     echo "${ACTION}ing $MOVE"
     git -C "$CLIENT_REPO" add act
     git -C "$CLIENT_REPO" commit -m "$ACTION $MOVE"
-    git -C "$CLIENT_REPO" push -f
+    git -C "$CLIENT_REPO" push deploy master
   else
     echo "No change, still going $MOVE"
   fi
