@@ -3,6 +3,7 @@
 import logging
 import os
 import stat
+import shutil
 from os import system, path
 from os.path import realpath, dirname, expanduser
 
@@ -68,6 +69,7 @@ class Context:
         self.ssh_pub_key_path = self.ssh_dir_path + '/' + self.ssh_key_name + '.pub'
         self.ssh_priv_key_path = self.ssh_dir_path + '/' + self.ssh_key_name
         self.runner_bin_path = fix_path('/usr/bin/gitland-bot')
+        self.service_file_dst = fix_path('/etc/systemd/system/gitland-bot.service')
 
     def update_and_install(self):
         run_command('apt update')
@@ -165,11 +167,13 @@ class Context:
         st = os.stat(self.runner_bin_path)
         os.chmod(self.runner_bin_path, st.st_mode | stat.S_IEXEC)
 
-    def tell_user_to_enable_service(self):
+    def setup_systemd_service(self):
+        service_file = fix_path('gitland-bot.service')
+        shutil.copy(service_file, self.service_file_dst)
         add_required_action(
             'Enable systemd service',
-            'Run `systemctl enable gitland-bot.service` ' +
-            'and/or `systemctl start gitland-bot.service` ' +
+            'Run `systemctl enable gitland-bot` ' +
+            'and/or `systemctl start gitland-bot` ' +
             'to run the bot')
 
 logging.basicConfig(level=logging.DEBUG)
@@ -180,6 +184,6 @@ context.setup_gitland_client_repo()
 context.setup_gitland_server_repo()
 context.setup_deploy_key()
 context.setup_gitland_bot_runner()
-context.tell_user_to_enable_service()
+context.setup_systemd_servicec()
 show_required_actions()
 logger.info('Done')
