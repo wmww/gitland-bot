@@ -1,7 +1,7 @@
 use crate::*;
 
 const ZONE_SIZE: i32 = 7;
-const DEFEND_RANGE: i32 = 9;
+const DEFEND_RANGE: i32 = 14;
 
 fn count_good_squares_in_direction(
     map: &Map,
@@ -60,33 +60,38 @@ fn find_target_square(game: &Game) -> Option<(Position, String)> {
     } else {
         let mut threats = Vec::new();
         let map = game.map();
+        let our_pos = game.our_position();
         for (name, position) in &game.map().players {
             let their_team = game.players[name].team;
             let they_own_left_of_them =
                 map.controller_of(*position + Position::new(-1, 0)) == their_team;
             let they_own_top_of_them =
                 map.controller_of(*position + Position::new(0, -1)) == their_team;
+            let dist_from_us = our_pos.distance(*position) - DEFEND_RANGE;
             if their_team == game.our_team() || position.x == 0 || position.y == 0 {
                 // Hack until non-active players are kicked
                 continue;
             } else if position.x > ZONE_SIZE && position.y <= ZONE_SIZE && !they_own_left_of_them {
-                let dist = position.x - ZONE_SIZE;
+                let dist = dist_from_us + position.x - ZONE_SIZE;
                 threats.push((dist, Position::new(ZONE_SIZE, position.y), name));
             } else if position.x <= ZONE_SIZE && position.y > ZONE_SIZE && !they_own_top_of_them {
-                let dist = position.y - ZONE_SIZE;
+                let dist = dist_from_us + position.y - ZONE_SIZE;
                 threats.push((dist, Position::new(position.x, ZONE_SIZE), name));
             } else if position.x > ZONE_SIZE
                 && position.y > ZONE_SIZE
                 && (!they_own_left_of_them || !they_own_top_of_them)
             {
-                let dist = (position.x - ZONE_SIZE) + (position.y - ZONE_SIZE);
+                let dist = dist_from_us + (position.x - ZONE_SIZE) + (position.y - ZONE_SIZE);
                 threats.push((dist, Position::new(ZONE_SIZE, ZONE_SIZE), name));
             }
         }
         let biggest_threat = threats.iter().min_by_key(|threat| threat.0);
         if let Some(threat) = biggest_threat {
             if threat.0 < DEFEND_RANGE {
-                Some((threat.1, format!("defend against {}", threat.2)))
+                Some((
+                    threat.1,
+                    format!("defend against {} at {}", threat.2, map.players[threat.2]),
+                ))
             } else {
                 None
             }
@@ -106,7 +111,10 @@ pub fn run(game: &Game) -> Direction {
             eprintln!("Moving toward {} to {}", target, reason);
             Some(target)
         }
-        None => None,
+        None => {
+            eprintln!("No enemies around");
+            None
+        }
     };
     // let target = find_enimy_square(map, pos, team);
     let directions: Vec<(f32, Direction)> = vec![
