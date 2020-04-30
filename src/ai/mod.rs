@@ -1,7 +1,7 @@
 use crate::*;
 
 const ZONE_SIZE: i32 = 7;
-const DEFEND_RANGE: i32 = 6;
+const DEFEND_RANGE: i32 = 9;
 
 fn count_good_squares_in_direction(
     map: &Map,
