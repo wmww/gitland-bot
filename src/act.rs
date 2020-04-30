@@ -5,7 +5,7 @@ use std::io::Write;
 pub fn act(game: &Game, args: &ActArgs) {
     let action = ai::run(&game);
     eprintln!("AI thinks we should move {:?}", action);
-    let action_str = action.to_string();
+    let action_str = action.to_string() + "\n";
     let mut act_path = args.client_repo_path.clone();
     act_path.push("/act");
     eprintln!("Writing {:?} to {:?}", action_str, act_path);
