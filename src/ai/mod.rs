@@ -41,10 +41,10 @@ fn count_good_squares_in_direction(
     score
 }
 
-fn find_target_square(game: &Game) -> Option<Position> {
+fn find_target_square(game: &Game) -> Option<(Position, String)> {
     let starting = game.our_position();
     if starting.x > ZONE_SIZE || starting.y > ZONE_SIZE {
-        Some(Position::new(
+        let target = Position::new(
             if starting.x > ZONE_SIZE {
                 ZONE_SIZE
             } else {
@@ -55,25 +55,26 @@ fn find_target_square(game: &Game) -> Option<Position> {
             } else {
                 starting.y
             },
-        ))
+        );
+        Some((target, "enter zone".into()))
     } else {
         let mut threats = Vec::new();
-        for position in game.map().players.values() {
+        for (name, position) in &game.map().players {
             if position.x > ZONE_SIZE && position.y <= ZONE_SIZE {
                 let dist = position.x - ZONE_SIZE;
-                threats.push((dist, Position::new(ZONE_SIZE, position.y)));
+                threats.push((dist, Position::new(ZONE_SIZE, position.y), name));
             } else if position.x <= ZONE_SIZE && position.y > ZONE_SIZE {
                 let dist = position.y - ZONE_SIZE;
-                threats.push((dist, Position::new(position.x, ZONE_SIZE)));
+                threats.push((dist, Position::new(position.x, ZONE_SIZE), name));
             } else if position.x > ZONE_SIZE && position.y > ZONE_SIZE {
                 let dist = (position.x - ZONE_SIZE) + (position.y - ZONE_SIZE);
-                threats.push((dist, Position::new(ZONE_SIZE, ZONE_SIZE)));
+                threats.push((dist, Position::new(ZONE_SIZE, ZONE_SIZE), name));
             }
         }
         let biggest_threat = threats.iter().min_by_key(|threat| threat.0);
         if let Some(threat) = biggest_threat {
             if threat.0 < DEFEND_RANGE {
-                Some(threat.1)
+                Some((threat.1, format!("defend against {}", threat.2)))
             } else {
                 None
             }
@@ -88,7 +89,13 @@ pub fn run(game: &Game) -> Direction {
     eprintln!("We are at {}", pos);
     let map = game.map();
     let team = game.our_team();
-    let target = find_target_square(game);
+    let target = match find_target_square(game) {
+        Some((target, reason)) => {
+            eprintln!("Moving toward {} to {}", target, reason);
+            Some(target)
+        }
+        None => None,
+    };
     // let target = find_enimy_square(map, pos, team);
     let directions: Vec<(f32, Direction)> = vec![
         (Position::new(0, 0), Direction::Null),
