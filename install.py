@@ -72,9 +72,9 @@ class Context:
         self.service_file_dst = fix_path('/etc/systemd/system/gitland-bot.service')
 
     def update_and_install(self):
-        run_command('apt update')
-        run_command('apt upgrade')
-        run_command('apt install ' + ' '.join(self.required_ubuntu_packages))
+        run_command('apt update -y')
+        run_command('apt upgrade -y')
+        run_command('apt install -y ' + ' '.join(self.required_ubuntu_packages))
 
     def setup_git(self):
         git_conf_path = fix_path('~/.gitconfig')
