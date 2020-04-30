@@ -1,7 +1,7 @@
 use crate::*;
 
 const ZONE_SIZE: i32 = 7;
-const DEFEND_RANGE: i32 = 12;
+const DEFEND_RANGE: i32 = 6;
 
 fn count_good_squares_in_direction(
     map: &Map,
@@ -60,9 +60,7 @@ fn find_target_square(game: &Game) -> Option<(Position, String)> {
     } else {
         let mut threats = Vec::new();
         for (name, position) in &game.map().players {
-            if game.players[name].team == game.our_team() {
-                continue;
-            } else if position.y == 0 {
+            if game.players[name].team == game.our_team() || position.x == 0 || position.y == 0 {
                 // Hack until non-active players are kicked
                 continue;
             } else if position.x > ZONE_SIZE && position.y <= ZONE_SIZE {
