@@ -60,7 +60,12 @@ fn find_target_square(game: &Game) -> Option<(Position, String)> {
     } else {
         let mut threats = Vec::new();
         for (name, position) in &game.map().players {
-            if position.x > ZONE_SIZE && position.y <= ZONE_SIZE {
+            if game.players[name].team == game.our_team() {
+                continue;
+            } else if position.y == 0 {
+                // Hack until non-active players are kicked
+                continue;
+            } else if position.x > ZONE_SIZE && position.y <= ZONE_SIZE {
                 let dist = position.x - ZONE_SIZE;
                 threats.push((dist, Position::new(ZONE_SIZE, position.y), name));
             } else if position.x <= ZONE_SIZE && position.y > ZONE_SIZE {
