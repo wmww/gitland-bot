@@ -34,5 +34,5 @@ while true; do
   iteration
   echo
   echo "sleeping..."
-  sleep 45s
+  sleep 20s
 done
