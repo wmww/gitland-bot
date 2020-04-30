@@ -59,17 +59,26 @@ fn find_target_square(game: &Game) -> Option<(Position, String)> {
         Some((target, "enter zone".into()))
     } else {
         let mut threats = Vec::new();
+        let map = game.map();
         for (name, position) in &game.map().players {
-            if game.players[name].team == game.our_team() || position.x == 0 || position.y == 0 {
+            let their_team = game.players[name].team;
+            let they_own_left_of_them =
+                map.controller_of(*position + Position::new(-1, 0)) == their_team;
+            let they_own_top_of_them =
+                map.controller_of(*position + Position::new(0, -1)) == their_team;
+            if their_team == game.our_team() || position.x == 0 || position.y == 0 {
                 // Hack until non-active players are kicked
                 continue;
-            } else if position.x > ZONE_SIZE && position.y <= ZONE_SIZE {
+            } else if position.x > ZONE_SIZE && position.y <= ZONE_SIZE && !they_own_left_of_them {
                 let dist = position.x - ZONE_SIZE;
                 threats.push((dist, Position::new(ZONE_SIZE, position.y), name));
-            } else if position.x <= ZONE_SIZE && position.y > ZONE_SIZE {
+            } else if position.x <= ZONE_SIZE && position.y > ZONE_SIZE && !they_own_top_of_them {
                 let dist = position.y - ZONE_SIZE;
                 threats.push((dist, Position::new(position.x, ZONE_SIZE), name));
-            } else if position.x > ZONE_SIZE && position.y > ZONE_SIZE {
+            } else if position.x > ZONE_SIZE
+                && position.y > ZONE_SIZE
+                && (!they_own_left_of_them || !they_own_top_of_them)
+            {
                 let dist = (position.x - ZONE_SIZE) + (position.y - ZONE_SIZE);
                 threats.push((dist, Position::new(ZONE_SIZE, ZONE_SIZE), name));
             }

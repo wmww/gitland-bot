@@ -149,6 +149,12 @@ impl Map {
             None
         }
     }
+
+    pub fn controller_of(&self, pos: Position) -> Team {
+        self.square(pos)
+            .map(|s| s.controlled_by)
+            .unwrap_or(Team::Null)
+    }
 }
 
 #[derive(Debug)]
