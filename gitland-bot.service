@@ -5,6 +5,7 @@ Description=Run wmwws Gitland bot
 Type=simple
 Restart=always
 RestartSec=20
+User=root
 ExecStart=/usr/bin/gitland-bot
 
 [Install]
