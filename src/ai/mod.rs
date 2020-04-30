@@ -1,5 +1,7 @@
 use crate::*;
-use std::collections::HashSet;
+
+const ZONE_SIZE: i32 = 7;
+const DEFEND_RANGE: i32 = 12;
 
 fn count_good_squares_in_direction(
     map: &Map,
@@ -11,8 +13,14 @@ fn count_good_squares_in_direction(
     let mut pos = starting;
     let mut score = 0.0;
     let mut value = 1.0;
+    if vector.x == 0 && vector.y == 0 {
+        return 0.0;
+    }
     loop {
         pos = pos + vector;
+        if pos.x >= ZONE_SIZE || pos.y >= ZONE_SIZE {
+            break;
+        }
         if let Some(square) = map.square(pos) {
             if square.occupied_by_player.is_none() {
                 if square.controlled_by == Team::Null {
@@ -33,24 +41,46 @@ fn count_good_squares_in_direction(
     score
 }
 
-fn find_enimy_square(map: &Map, starting: Position, our_team: Team) -> Position {
-    for range in 1..100 {
-        eprintln!("looking within {} square of position", range);
-        for dx in -range..range + 1 {
-            for dy in -range..range + 1 {
-                if i32::abs(dx) + i32::abs(dy) <= range {
-                    let pos = starting + Position::new(dx, dy);
-                    eprintln!("scanning {}", pos);
-                    if let Some(square) = map.square(pos) {
-                        if square.controlled_by != our_team && square.occupied_by_player.is_none() {
-                            return pos;
-                        }
-                    }
-                }
+fn find_target_square(game: &Game) -> Option<Position> {
+    let starting = game.our_position();
+    if starting.x > ZONE_SIZE || starting.y > ZONE_SIZE {
+        Some(Position::new(
+            if starting.x > ZONE_SIZE {
+                ZONE_SIZE
+            } else {
+                starting.x
+            },
+            if starting.y > ZONE_SIZE {
+                ZONE_SIZE
+            } else {
+                starting.y
+            },
+        ))
+    } else {
+        let mut threats = Vec::new();
+        for position in game.map().players.values() {
+            if position.x > ZONE_SIZE && position.y <= ZONE_SIZE {
+                let dist = position.x - ZONE_SIZE;
+                threats.push((dist, Position::new(ZONE_SIZE, position.y)));
+            } else if position.x <= ZONE_SIZE && position.y > ZONE_SIZE {
+                let dist = position.y - ZONE_SIZE;
+                threats.push((dist, Position::new(position.x, ZONE_SIZE)));
+            } else if position.x > ZONE_SIZE && position.y > ZONE_SIZE {
+                let dist = (position.x - ZONE_SIZE) + (position.y - ZONE_SIZE);
+                threats.push((dist, Position::new(ZONE_SIZE, ZONE_SIZE)));
             }
         }
+        let biggest_threat = threats.iter().min_by_key(|threat| threat.0);
+        if let Some(threat) = biggest_threat {
+            if threat.0 < DEFEND_RANGE {
+                Some(threat.1)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
-    Position::new(2, 2)
 }
 
 pub fn run(game: &Game) -> Direction {
@@ -58,8 +88,10 @@ pub fn run(game: &Game) -> Direction {
     eprintln!("We are at {}", pos);
     let map = game.map();
     let team = game.our_team();
+    let target = find_target_square(game);
     // let target = find_enimy_square(map, pos, team);
     let directions: Vec<(f32, Direction)> = vec![
+        (Position::new(0, 0), Direction::Null),
         (Position::new(-1, 0), Direction::Left),
         (Position::new(1, 0), Direction::Right),
         (Position::new(0, -1), Direction::Up),
@@ -71,6 +103,21 @@ pub fn run(game: &Game) -> Direction {
             count_good_squares_in_direction(map, pos, *vector, team, 0.7),
             *direction,
         )
+    })
+    .map(|(score, direction)| {
+        if let Some(target) = target {
+            let correct_way = match direction {
+                Direction::Null => target == pos,
+                Direction::Left => target.x < pos.x,
+                Direction::Right => target.x > pos.x,
+                Direction::Up => target.y < pos.y,
+                Direction::Down => target.y > pos.y,
+            };
+            let score = score + if correct_way { 2.0 } else { 0.0 };
+            (score, direction)
+        } else {
+            (score, direction)
+        }
     })
     .collect();
     for (score, direciton) in &directions {

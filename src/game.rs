@@ -13,7 +13,7 @@ pub enum Direction {
 impl std::fmt::Display for Direction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Null => write!(f, ""),
+            Self::Null => write!(f, "idle"),
             Self::Up => write!(f, "up"),
             Self::Down => write!(f, "down"),
             Self::Left => write!(f, "left"),
@@ -44,7 +44,7 @@ impl FromStr for Team {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Position {
     pub x: i32,
     pub y: i32,
