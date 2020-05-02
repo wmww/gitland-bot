@@ -9,6 +9,7 @@ fn count_good_squares_in_direction(
     vector: Position,
     our_team: Team,
     falloff: f32,
+    stay_in_zone: bool,
 ) -> f32 {
     let mut pos = starting;
     let mut score = 0.0;
@@ -18,7 +19,7 @@ fn count_good_squares_in_direction(
     }
     loop {
         pos = pos + vector;
-        if pos.x >= ZONE_SIZE || pos.y >= ZONE_SIZE {
+        if stay_in_zone && (pos.x >= ZONE_SIZE || pos.y >= ZONE_SIZE) {
             break;
         }
         if let Some(square) = map.square(pos) {
@@ -113,7 +114,9 @@ pub fn run(game: &Game) -> Direction {
     eprintln!("We are at {}", pos);
     let map = game.map();
     let team = game.our_team();
-    let target = if enemies_are_in_zone(game) {
+    let leave_zone = enemies_are_in_zone(game);
+    let target = if leave_zone {
+        eprintln!("Enemies are in territory, might leave");
         None
     } else {
         match find_target_square(game) {
@@ -138,7 +141,7 @@ pub fn run(game: &Game) -> Direction {
     .iter()
     .map(|(vector, direction)| {
         (
-            count_good_squares_in_direction(map, pos, *vector, team, 0.7),
+            count_good_squares_in_direction(map, pos, *vector, team, 0.7, !leave_zone),
             *direction,
         )
     })
