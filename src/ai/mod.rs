@@ -77,9 +77,7 @@ fn find_target_square(game: &Game) -> Option<(Position, String)> {
             } else if position.x <= ZONE_SIZE && position.y > ZONE_SIZE {
                 let dist = dist_from_us + position.y - ZONE_SIZE;
                 threats.push((dist, Position::new(position.x, ZONE_SIZE), name));
-            } else if position.x > ZONE_SIZE
-                && position.y > ZONE_SIZE
-            {
+            } else if position.x > ZONE_SIZE && position.y > ZONE_SIZE {
                 let dist = dist_from_us + (position.x - ZONE_SIZE) + (position.y - ZONE_SIZE);
                 threats.push((dist, Position::new(ZONE_SIZE, ZONE_SIZE), name));
             }
@@ -100,19 +98,33 @@ fn find_target_square(game: &Game) -> Option<(Position, String)> {
     }
 }
 
+fn enemies_are_in_zone(game: &Game) -> bool {
+    for (name, position) in &game.map().players {
+        let their_team = game.players[name].team;
+        if their_team != game.our_team() && position.x <= ZONE_SIZE && position.y <= ZONE_SIZE {
+            return true;
+        }
+    }
+    false
+}
+
 pub fn run(game: &Game) -> Direction {
     let pos = game.our_position();
     eprintln!("We are at {}", pos);
     let map = game.map();
     let team = game.our_team();
-    let target = match find_target_square(game) {
-        Some((target, reason)) => {
-            eprintln!("Moving toward {} to {}", target, reason);
-            Some(target)
-        }
-        None => {
-            eprintln!("No enemies around");
-            None
+    let target = if enemies_are_in_zone(game) {
+        None
+    } else {
+        match find_target_square(game) {
+            Some((target, reason)) => {
+                eprintln!("Moving toward {} to {}", target, reason);
+                Some(target)
+            }
+            None => {
+                eprintln!("No enemies around");
+                None
+            }
         }
     };
     // let target = find_enimy_square(map, pos, team);
